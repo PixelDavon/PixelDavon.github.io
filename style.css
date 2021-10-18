@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap');
+
+body {
+    font-family: 'Montserrat',sans-serif;
+    background-color: #202020;
+    color: #f0f8ff;
+}
+button {
+    background-color: rgb(29, 182, 46);
+    border: 2px solid rgba(29, 185, 47, 0.844);
+    border-radius: 2px;
+    color: #f0f8ff;
+    transition: 0.3s ease;
+    cursor: pointer;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+button:hover {
+    background-color: rgb(35, 225, 57);
+    color: #2e2e2e;
+    border-radius: 10px;
+}
+button:active {
+    background-color: rgb(19, 129, 32);
+    border: 2px solid rgba(25, 102, 34, 0.844);
+}
+[center] {
+    text-align: center;
+}
+[nas] {text-decoration:none}
+[nas]:link{color:inherit}
+[nas]:visited{color:inherit}
+
+button[sp]+button[sp] {margin-left: 100px}
