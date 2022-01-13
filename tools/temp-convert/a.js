@@ -9,7 +9,7 @@
             return (toC(a,ttype.value)*9/5)+32;
         }
         function toK(a){
-            return toC(a,ttype.value)+273.15;
+            return new Number(toC(a,ttype.value))+273.15;
         }
         function toR(a){
             return toC(a,ttype.value)*4/5;
