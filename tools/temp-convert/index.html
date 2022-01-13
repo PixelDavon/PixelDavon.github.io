@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='a.min.js' defer></script>
+    <title>Temperature Convertor</title>
+</head>
+<body>
+    <input id='i' type="number" onkeypress="return event.charCode>=48&&event.charCode<=57||46==event.charCode&&!isNaN(this.value)&&1==this.value.split('.').length" autofocus alt="i" style='font-size: 30px;width: 300px;'>
+    <select id='temp' style='font-size: 30px;width: 300px;'>
+        <option value='c'>Celsius</option>
+        <option value='f'>Fahrenheit</option>
+        <option value='k'>Kelvin</option>
+        <option value='r'>Reaumur</option>
+    </select>
+    <h2>Celsius: <span id="q"></span></h2>
+    <h2>Fahrenheit: <span id="w"></span></h2>
+    <h2>Kelvin: <span id="e"></span></h2>
+    <h2>Reaumur: <span id="r"></span></h2>
+</body>
+</html>
