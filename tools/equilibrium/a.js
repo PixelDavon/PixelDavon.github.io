@@ -16,10 +16,46 @@
         var s=ss.value;
         var d2=d22.value;
         var s2=s22.value;
-        if(d==""||s==""||d2==""){
+        if(d==""||s==""){
             return alert("Please fill the fields");
         }
-        if(s2==""){
+        if(d2==""){
+            if(s2=="")return alert("Please fill the fields");
+            let price=(()=>{
+                var z=d-s;
+                var z1=s2+1;
+                var x=z/z1;
+                
+                pcal=
+`${d}-P=${s}+${s2}P
+${d}-${s}=${s2}+1P
+${z}=${z1}
+${z}/${z1}=${x}
+`
+                return x
+            })();
+            let demand=d-s;
+            dcal=
+`Qd=${d}-P
+Qd=${d}-${s}
+Qd=${demand}
+`
+            
+            let supply=s+(s2*price)
+            scal=
+`Qs=${s}+${s2}P
+Qs=${s}+(${s2}*${price})
+Qs=${s}+${s2*price}
+Qs=${supply}
+`
+            let iseq=demand==supply?'Yes':'No';
+            r[0].innerText=price;
+            r[1].innerText=demand;
+            r[2].innerText=supply;
+            r[3].innerText=iseq;
+        }
+        else if(s2==""){
+            if(d2=="")return alert("Please fill the fields");
             let price=(()=>{
                 var z=d-d2;
                 var x=z/s;
