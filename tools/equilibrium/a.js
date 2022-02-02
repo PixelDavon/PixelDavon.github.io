@@ -47,7 +47,7 @@ Qd=${demand}
 Qs=${s}+(${s2}*${price})
 Qs=${s}+${s2*price}
 Qs=${supply}
-`
+`;
             let iseq=demand==supply?'Yes':'No';
             r[0].innerText=price;
             r[1].innerText=demand;
