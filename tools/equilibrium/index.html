@@ -43,8 +43,8 @@
     <title>Equilibrium</title>
 </head>
 <body>
-    <h2>Demand: P = <input oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" id='d'> - <input oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" id='d2'> Q</h2>
-    <h2>Supply: P = <input oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" id='s'> + <input oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" id='s2'> Q</h2>
+    <h2>Demand: P = <input type='number' id='d'> - <input type='number' id='d2'> Q</h2>
+    <h2>Supply: P = <input type='number' id='s'> + <input type='number' id='s2'> Q</h2>
 
     <button id='submit'>GET</button>
 
