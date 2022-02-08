@@ -22,8 +22,8 @@
         if(d2==""){
             if(s2=="")return alert("Please fill the fields");
             let price=(()=>{
-                var z=d-s;
-                var z1=s2+1;
+                var z=parseInt(d)-parseInt(s);
+                var z1=parseInt(s2)+1;
                 var x=z/z1;
                 
                 pcal=
