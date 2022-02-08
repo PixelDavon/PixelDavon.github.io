@@ -41,7 +41,7 @@ Qd=${d}-${s}
 Qd=${demand}
 `
             
-            let supply=s+(s2*price)
+            let supply=parseInt(s)+(parseInt(s2)*parseInt(price))
             scal=
 `Qs=${s}+${s2}P
 Qs=${s}+(${s2}*${price})
