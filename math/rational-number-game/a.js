@@ -1,12 +1,9 @@
 let c = document.getElementById('cnv'),qst=document.getElementById('qst');
 kaboom({width:600,height:500,background:[144, 178, 232],canvas:c});
 loadSprite('catcher','cart.png');
-
 var change=(e)=>{qst.innerText=e;MathJax.typeset()}
 const ri=(m,b)=>Math.round(Math.random()*(m-b))+b;
-
 let ball_loop=true,real,catcher,score;
-
 let SPEED=130;
 // question generator but not perfect
 let getQ=(nn,mx)=>{
@@ -27,7 +24,6 @@ let getQ=(nn,mx)=>{
     }
     return [n1,sqrt1,sqrt2,divide]
 }
-
 let loops=()=>{
     onUpdate(()=>{
         if(ri(0,100)>98&&ball_loop){
@@ -66,14 +62,12 @@ let loops=()=>{
         add([pos(300,30),origin('center'),text('u died, press r',{size:50})])
     });
 };
-
 let start=()=>{
     var q=getQ();
     real=[q[1],q[2],1]
     console.log(q)
     change(`\\[\\sqrt{${q[0]}}\\]`)
 }
-
 function main(){
     ball_loop=true;
     score = add([
