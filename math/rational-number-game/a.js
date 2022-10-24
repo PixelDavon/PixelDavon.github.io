@@ -9,12 +9,12 @@ let ball_loop=true,real,catcher,score;
 
 let SPEED=130;
 // question generator but not perfect
-let getQ=(nn)=>{
+let getQ=(nn,mx)=>{
     var loop=!1,n1=0,sqrt2=0,sqrt1=0,divide=0;
     while(!loop){
         // random number
         n1=nn?nn:ri(10,100);
-        for(i=10; i>=2; i--){
+        for(i=mx?mx:10; i>=2; i--){
             // if not divideable, skip
             // if square rooted number is a decimal, skip
             if(n1%i!=0||!Number.isSafeInteger(Math.sqrt(n1/i)))continue;
