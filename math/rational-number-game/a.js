@@ -49,7 +49,7 @@ let loops=()=>{
     catcher.onCollide('ball',(b)=>{
         if(b.correct){
             score.addScore();
-            if(score.v==3){
+            if(score.v==6){
                 every(destroy)
                 ball_loop=false;
                 add([pos(300,30),origin('center'),text('u win',{size:50})])
