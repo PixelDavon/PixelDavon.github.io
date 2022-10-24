@@ -44,7 +44,7 @@ let loops=()=>{
             ]);
         };
     });
-    onKeyPress('r',()=>go('main'));
+    onKeyPress('r',()=>go('main'))
     onUpdate('ball',(obj)=>{obj.move(ri(-10,10),obj.speed)});
     catcher.onCollide('ball',(b)=>{
         if(b.correct){
@@ -86,4 +86,4 @@ function main(){
 }
 scene('main',main);
 main();
-start();
+start()
