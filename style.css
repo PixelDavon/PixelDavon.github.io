@@ -1,34 +1,590 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
-    font-family: 'Montserrat',sans-serif;
-    background-color: #202020;
-    color: #f0f8ff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    min-height: 100vh;
+    color: #374151;
 }
-button {
-    background-color: rgb(29, 182, 46);
-    border: 2px solid rgba(29, 185, 47, 0.844);
-    border-radius: 2px;
-    color: #f0f8ff;
-    transition: 0.3s ease;
-    cursor: pointer;
-    padding-left: 15px;
-    padding-right: 15px;
-}
-button:hover {
-    background-color: rgb(35, 225, 57);
-    color: #2e2e2e;
-    border-radius: 10px;
-}
-button:active {
-    background-color: rgb(19, 129, 32);
-    border: 2px solid rgba(25, 102, 34, 0.844);
-}
-[center] {
-    text-align: center;
-}
-[nas] {text-decoration:none}
-[nas]:link{color:inherit}
-[nas]:visited{color:inherit}
 
-button[sp]+button[sp] {margin-left: 100px}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header Styles */
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    position: relative;
+    padding: 8px;
+    background: #2563eb;
+    border-radius: 12px;
+    color: white;
+}
+
+.icon-large {
+    width: 32px;
+    height: 32px;
+}
+
+.badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    border-color: #2563eb;
+}
+
+.tab-btn.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.tab-badge {
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Notification Banner */
+.notification-banner {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    gap: 12px;
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.banner-content i {
+    color: #d97706;
+}
+
+.banner-btn {
+    padding: 6px 12px;
+    border: 1px solid #d97706;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #d97706;
+}
+
+.banner-btn:hover {
+    background: #d97706;
+    color: white;
+}
+
+/* Main Content */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        grid-template-columns: 350px 1fr;
+    }
+}
+
+/* Card Styles */
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.form-card {
+    position: sticky;
+    top: 24px;
+}
+
+.card-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.card-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+/* Form Styles */
+.form {
+    display: none;
+}
+
+.form.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+/* Button Styles */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-outline {
+    padding: 10px 16px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-outline:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+/* Content Area */
+.content-area {
+    min-height: 600px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.tab-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+#tasks-count {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Task Item Styles */
+.tasks-container, .goals-container, .reminders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task-item {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border-left: 4px solid;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s;
+}
+
+.task-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-item.priority-high {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+.task-item.priority-medium {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.task-item.priority-low {
+    border-left-color: #10b981;
+    background: #ecfdf5;
+}
+
+.task-item.notified {
+    box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.task-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.task-title {
+    font-weight: 600;
+    font-size: 16px;
+    flex: 1;
+}
+
+.task-priority {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.task-description {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.task-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Goal Item Styles */
+.goal-item {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.goal-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.goal-title {
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.goal-description {
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.progress-container {
+    margin-bottom: 12px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: between;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #2563eb;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.progress-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Completed Section */
+.completed-section {
+    margin-top: 32px;
+}
+
+.completed-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.completed-task {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.completed-task-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    text-decoration: line-through;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-icon {
+    padding: 8px;
+    background: #2563eb;
+    border-radius: 8px;
+    color: white;
+}
+
+.modal-header h2 {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.reminder-task {
+    background: #dbeafe;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-weight: 500;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.modal-footer button {
+    flex: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+    
+    .header {
+        text-align: center;
+    }
+    
+    .header-left {
+        justify-content: center;
+    }
+    
+    .nav-tabs {
+        justify-content: center;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+}
+
+/* Animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}

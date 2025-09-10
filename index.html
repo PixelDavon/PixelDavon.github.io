@@ -1,17 +1,237 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel='stylesheet' href='style.css'>
-    <script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <title>PyxlDavon</title>
+    <title>Smart Reminder</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@0.263.0/font/lucide.css" rel="stylesheet">
 </head>
 <body>
-    <script>var ytlink='https://youtube.com/pyxldavon'
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <i data-lucide="bell" class="icon-large"></i>
+                    <span class="badge" id="unread-badge">0</span>
+                </div>
+                <h1>Smart Reminder</h1>
+            </div>
+            
+            <nav class="nav-tabs">
+                <button class="tab-btn active" data-tab="tasks">
+                    <i data-lucide="check-square"></i>
+                    Tugas
+                    <span class="tab-badge" id="tasks-badge">0</span>
+                </button>
+                <button class="tab-btn" data-tab="goals">
+                    <i data-lucide="target"></i>
+                    Tujuan
+                </button>
+                <button class="tab-btn" data-tab="reminders">
+                    <i data-lucide="bell-ring"></i>
+                    Pengingat
+                    <span class="tab-badge" id="reminders-badge">0</span>
+                </button>
+            </nav>
+        </header>
+
+        <!-- Notification Permission Banner -->
+        <div class="notification-banner" id="notification-banner">
+            <div class="banner-content">
+                <i data-lucide="bell"></i>
+                <p>Aktifkan notifikasi untuk mendapatkan pengingat tugas</p>
+            </div>
+            <button class="banner-btn" id="enable-notifications">Aktifkan</button>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar Form -->
+            <aside class="sidebar">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <h2>
+                            <i data-lucide="plus"></i>
+                            Tambah <span id="form-title">Tugas</span> Baru
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <!-- Task Form -->
+                        <form id="task-form" class="form active">
+                            <div class="form-group">
+                                <label for="task-title">Judul Tugas</label>
+                                <input type="text" id="task-title" placeholder="Apa yang perlu dilakukan?" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-description">Deskripsi</label>
+                                <textarea id="task-description" placeholder="Detail tugas..." rows="3"></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="task-date">Tanggal Jatuh Tempo</label>
+                                    <input type="date" id="task-date" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="task-time">Waktu Pengingat</label>
+                                    <input type="time" id="task-time" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="task-priority">Prioritas</label>
+                                    <select id="task-priority">
+                                        <option value="low">Rendah</option>
+                                        <option value="medium" selected>Sedang</option>
+                                        <option value="high">Tinggi</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="task-optimal">Waktu Optimal (opsional)</label>
+                                    <input type="time" id="task-optimal">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-category">Kategori</label>
+                                <select id="task-category">
+                                    <option value="work">Pekerjaan</option>
+                                    <option value="personal">Pribadi</option>
+                                    <option value="health">Kesehatan</option>
+                                    <option value="learning">Pembelajaran</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary">
+                                <i data-lucide="plus"></i>
+                                Tambah Tugas
+                            </button>
+                        </form>
+
+                        <!-- Goal Form -->
+                        <form id="goal-form" class="form">
+                            <div class="form-group">
+                                <label for="goal-title">Judul Tujuan</label>
+                                <input type="text" id="goal-title" placeholder="Apa tujuan Anda?" required>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="goal-target">Target</label>
+                                    <input type="number" id="goal-target" placeholder="Jumlah target" min="1" value="1" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="goal-unit">Satuan</label>
+                                    <input type="text" id="goal-unit" placeholder="contoh: tugas" value="tugas" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="goal-date">Tanggal Target</label>
+                                <input type="date" id="goal-date" required>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary">
+                                <i data-lucide="target"></i>
+                                Tambah Tujuan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <!-- Tasks Tab -->
+                <div id="tasks-tab" class="tab-content active">
+                    <div class="tab-header">
+                        <h2>Daftar Tugas</h2>
+                        <span id="tasks-count">0 tugas belum selesai</span>
+                    </div>
+                    
+                    <div id="tasks-list" class="tasks-container">
+                        <!-- Tasks will be inserted here -->
+                    </div>
+                    
+                    <div id="completed-tasks" class="completed-section">
+                        <h3>Tugas Selesai</h3>
+                        <div id="completed-tasks-list">
+                            <!-- Completed tasks will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals Tab -->
+                <div id="goals-tab" class="tab-content">
+                    <h2>Target dan Progress</h2>
+                    <div id="goals-list" class="goals-container">
+                        <!-- Goals will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Reminders Tab -->
+                <div id="reminders-tab" class="tab-content">
+                    <h2>Pengingat Aktif</h2>
+                    <div id="reminders-list" class="reminders-container">
+                        <!-- Reminders will be inserted here -->
+                    </div>
+                    
+                    <div id="reminders-history" class="completed-section">
+                        <h3>Riwayat Pengingat</h3>
+                        <div id="history-list">
+                            <!-- History will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminder-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="bell"></i>
+                </div>
+                <h2>Pengingat Tugas</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <p>Apakah Anda sudah menyelesaikan tugas ini?</p>
+                <div class="reminder-task" id="reminder-task-title"></div>
+                
+                <div class="form-group">
+                    <label for="reminder-response">Tambahkan catatan (opsional)</label>
+                    <textarea id="reminder-response" placeholder="Catatan tentang tugas..." rows="3"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-outline" id="reminder-later">Nanti Saja</button>
+                <button class="btn-primary" id="reminder-done">
+                    <i data-lucide="check-circle"></i>
+                    Tandai Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden audio for notifications -->
+    <audio id="notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3"></audio>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
     </script>
-    <h1>nothin to see here</h1>
 </body>
 </html>
