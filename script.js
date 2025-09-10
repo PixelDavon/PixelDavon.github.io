@@ -467,7 +467,7 @@ class SmartReminder {
             </div>
             <div class="goal-description">
                 Target: ${goal.target} ${goal.unit} • Selesai: ${this.formatDate(goal.targetDate)}
-            </div>
+            </极客div>
             <div class="progress-container">
                 <div class="progress-info">
                     <span>Progress: ${goal.progress}/${goal.target} ${goal.unit}</span>
@@ -563,4 +563,84 @@ class SmartReminder {
         div.innerHTML = `
             <div>
                 <div class="completed-task-text">
-                    <i data
+                    <i data-lucide="check-circle"></i>
+                    <span>${task.title}</span>
+                </div>
+                <p class="text-sm text-gray-600">
+                    Ditandai selesai pada ${reminder.time}
+                </p>
+                ${reminder.response ? `
+                <p class="text-sm text-gray-700 mt-2">
+                    <strong>Catatan:</strong> ${reminder.response}
+                </p>
+                ` : ''}
+            </div>
+        `;
+        
+        return div;
+    }
+
+    getPriorityIcon(priority) {
+        const colors = {
+            high: '#ef4444',
+            medium: '#f59e0b', 
+            low: '#10b981'
+        };
+        return `<i data-lucide="flag" style="color: ${colors[priority]}; width: 16px; height: 16px;"></i>`;
+    }
+
+    getPriorityText(priority) {
+        const texts = {
+            high: 'Tinggi',
+            medium: 'Sedang',
+            low: 'Rendah'
+        };
+        return texts[priority];
+    }
+
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+        });
+    }
+
+    updateBadges() {
+        // Update unread reminders badge
+        const unreadReminders = this.reminders.filter(r => !r.interacted && r.notificationShown).length;
+        document.getElementById('unread-badge').textContent = unreadReminders;
+        document.getElementById('reminders-badge').textContent = unreadReminders;
+        
+        // Update notified tasks badge
+        const notifiedTasks = this.tasks.filter(t => !t.completed && t.notified).length;
+        document.getElementById('tasks-badge').textContent = notifiedTasks;
+        
+        // Update document title
+        document.title = unreadReminders > 0 ? `(${unreadReminders}) Smart Reminder` : 'Smart Reminder';
+    }
+
+    saveData() {
+        localStorage.setItem('smart-reminder-tasks', JSON.stringify(this.tasks));
+        localStorage.setItem('smart-reminder-goals', JSON.stringify(this.goals));
+        localStorage.setItem('smart-reminder-reminders', JSON.stringify(this.reminders));
+    }
+
+    loadData() {
+        const savedTasks = localStorage.getItem('smart-reminder-tasks');
+        const savedGoals = localStorage.getItem('smart-reminder-goals');
+        const savedReminders = localStorage.getItem('smart-reminder-reminders');
+
+        if (savedTasks) this.tasks = JSON.parse(savedTasks);
+        if (savedGoals) this.goals = JSON.parse(savedGoals);
+        if (savedReminders) this.reminders = JSON.parse(savedReminders);
+
+        this.refreshDisplay();
+    }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new SmartReminder();
+});

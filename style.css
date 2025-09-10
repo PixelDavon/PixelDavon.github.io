@@ -9,6 +9,9 @@ body {
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
     min-height: 100vh;
     color: #374151;
+    line-height: 1.5;
+    word-spacing: normal;
+    letter-spacing: normal;
 }
 
 .container {
@@ -63,6 +66,7 @@ h1 {
     font-size: 28px;
     font-weight: 700;
     color: #1f2937;
+    margin-bottom: 8px;
 }
 
 .nav-tabs {
@@ -110,7 +114,7 @@ h1 {
 .notification-banner {
     display: flex;
     align-items: center;
-    justify-content: between;
+    justify-content: space-between;
     background: #fef3c7;
     border: 1px solid #f59e0b;
     border-radius: 8px;
@@ -278,7 +282,7 @@ input:focus, select:focus, textarea:focus {
 
 .tab-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
 }
@@ -334,7 +338,7 @@ input:focus, select:focus, textarea:focus {
 
 .task-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 8px;
 }
@@ -388,7 +392,7 @@ input:focus, select:focus, textarea:focus {
 
 .goal-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 16px;
 }
@@ -409,7 +413,7 @@ input:focus, select:focus, textarea:focus {
 
 .progress-info {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     margin-bottom: 8px;
     font-size: 14px;
 }
@@ -454,7 +458,7 @@ input:focus, select:focus, textarea:focus {
     border-radius: 8px;
     padding: 12px;
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
 }
