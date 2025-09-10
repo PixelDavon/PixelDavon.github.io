@@ -14,267 +14,286 @@ class SmartReminder {
     }
 
     initializeApp() {
-        // Set current date as default for date inputs
+        // set sensible defaults for date/time inputs
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('task-date').value = today;
-        document.getElementById('goal-date').value = today;
-        
-        // Set current time + 1 hour as default for time inputs
+        const taskDate = document.getElementById('task-date');
+        const goalDate = document.getElementById('goal-date');
+        const taskTime = document.getElementById('task-time');
+
+        if (taskDate) taskDate.value = today;
+        if (goalDate) goalDate.value = today;
+
         const now = new Date();
         now.setHours(now.getHours() + 1);
-        const timeString = now.toTimeString().substring(0, 5);
-        document.getElementById('task-time').value = timeString;
-        
-        // Check notification permission
+        if (taskTime) taskTime.value = now.toTimeString().substring(0,5);
+
+        // check notification permission and hide banner if granted
         if ('Notification' in window) {
             this.notificationPermission = Notification.permission;
-            if (this.notificationPermission === 'granted') {
-                this.hideNotificationBanner();
-            }
+            if (this.notificationPermission === 'granted') this.hideNotificationBanner();
         }
+
+        // allow audio to be played after first user interaction in some browsers
+        // (attempt to unlock audio). This won't cause sound to play immediately.
+        const audio = document.getElementById('notification-sound');
+        const unlockAudio = () => {
+            if (audio) {
+                audio.play().then(()=>{ audio.pause(); audio.currentTime = 0; }).catch(()=>{});
+            }
+            document.removeEventListener('click', unlockAudio);
+        };
+        document.addEventListener('click', unlockAudio);
     }
 
     setupEventListeners() {
-        // Tab switching
+        // Tab switching: use the button element itself so clicking inner icons/text also works
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                if (tab) this.switchTab(tab);
             });
         });
 
-        // Form submissions
-        document.getElementById('task-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addTask();
-        });
+        // Forms
+        const taskForm = document.getElementById('task-form');
+        if (taskForm) taskForm.addEventListener('submit', (e) => { e.preventDefault(); this.addTask(); });
 
-        document.getElementById('goal-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addGoal();
-        });
+        const goalForm = document.getElementById('goal-form');
+        if (goalForm) goalForm.addEventListener('submit', (e) => { e.preventDefault(); this.addGoal(); });
 
-        // Notification permission
-        document.getElementById('enable-notifications').addEventListener('click', () => {
-            this.requestNotificationPermission();
-        });
+        // Notification permission button
+        const enableBtn = document.getElementById('enable-notifications');
+        if (enableBtn) enableBtn.addEventListener('click', () => this.requestNotificationPermission());
 
-        // Modal actions
-        document.getElementById('modal-close').addEventListener('click', () => {
-            this.closeModal();
-        });
+        // Modal controls
+        const modalClose = document.getElementById('modal-close');
+        if (modalClose) modalClose.addEventListener('click', () => this.closeModal());
 
-        document.getElementById('reminder-later').addEventListener('click', () => {
-            this.closeModal();
-        });
+        const reminderLater = document.getElementById('reminder-later');
+        if (reminderLater) reminderLater.addEventListener('click', () => this.closeModal());
 
-        document.getElementById('reminder-done').addEventListener('click', () => {
-            this.completeReminder();
-        });
+        const reminderDone = document.getElementById('reminder-done');
+        if (reminderDone) reminderDone.addEventListener('click', () => this.completeReminder());
     }
 
     switchTab(tabName) {
+        if (!tabName) return;
         this.currentTab = tabName;
-        
-        // Update active tab button
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-        
-        // Update active tab content
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.getElementById(`${tabName}-tab`).classList.add('active');
-        
-        // Update form title and visibility
-        document.getElementById('form-title').textContent = tabName === 'tasks' ? 'Tugas' : 'Tujuan';
-        document.getElementById('task-form').classList.toggle('active', tabName === 'tasks');
-        document.getElementById('goal-form').classList.toggle('active', tabName === 'goals');
-        
-        // Refresh displayed data
+
+        // update active tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // update tab content
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        const content = document.getElementById(`${tabName}-tab`);
+        if (content) content.classList.add('active');
+
+        // update form title and visibility
+        const formTitle = document.getElementById('form-title');
+        if (formTitle) formTitle.textContent = tabName === 'tasks' ? 'Tugas' : 'Tujuan';
+        const taskForm = document.getElementById('task-form');
+        const goalForm = document.getElementById('goal-form');
+        if (taskForm) taskForm.classList.toggle('active', tabName === 'tasks');
+        if (goalForm) goalForm.classList.toggle('active', tabName === 'goals');
+
         this.refreshDisplay();
     }
 
+    // --- Task / Reminder / Goal management ---
     addTask() {
-        const title = document.getElementById('task-title').value.trim();
+        const titleInput = document.getElementById('task-title');
+        const descInput = document.getElementById('task-description');
+        const dateInput = document.getElementById('task-date');
+        const timeInput = document.getElementById('task-time');
+        const priorityInput = document.getElementById('task-priority');
+        const categoryInput = document.getElementById('task-category');
+        const optimalInput = document.getElementById('task-optimal');
+
+        if (!titleInput || !dateInput || !timeInput) return;
+        const title = titleInput.value.trim();
         if (!title) return;
+
+        // build a full ISO datetime for reminder (local time)
+        const dueDate = dateInput.value; // YYYY-MM-DD
+        const time = timeInput.value; // HH:MM
+        const reminderDate = new Date(`${dueDate}T${time}:00`);
 
         const task = {
             id: Date.now().toString(),
-            title: title,
-            description: document.getElementById('task-description').value.trim(),
-            dueDate: document.getElementById('task-date').value,
-            priority: document.getElementById('task-priority').value,
+            title,
+            description: descInput ? descInput.value.trim() : '',
+            dueDate,
+            priority: priorityInput ? priorityInput.value : 'medium',
             completed: false,
-            category: document.getElementById('task-category').value,
-            optimalTime: document.getElementById('task-optimal').value || undefined,
-            reminderTime: document.getElementById('task-time').value,
+            category: categoryInput ? categoryInput.value : 'general',
+            optimalTime: optimalInput ? optimalInput.value || undefined : undefined,
+            reminderTime: reminderDate.toISOString(),
             notified: false
         };
 
         this.tasks.push(task);
-        
-        // Create reminder
+
         const reminder = {
-            id: Date.now().toString(),
+            id: Date.now().toString() + '-r',
             taskId: task.id,
             time: task.reminderTime,
             message: `Pengingat untuk: ${task.title}`,
             interacted: false,
-            notificationShown: false
+            notificationShown: false,
+            response: undefined
         };
 
         this.reminders.push(reminder);
-        
-        // Reset form
-        document.getElementById('task-form').reset();
-        document.getElementById('task-date').value = new Date().toISOString().split('T')[0];
-        
-        // Update display and save
-        this.refreshDisplay();
+
+        // reset form
+        const taskForm = document.getElementById('task-form');
+        if (taskForm) taskForm.reset();
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
         this.saveData();
+        this.refreshDisplay();
     }
 
     addGoal() {
-        const title = document.getElementById('goal-title').value.trim();
+        const titleInput = document.getElementById('goal-title');
+        const dateInput = document.getElementById('goal-date');
+        const targetInput = document.getElementById('goal-target');
+        const unitInput = document.getElementById('goal-unit');
+
+        if (!titleInput || !dateInput) return;
+        const title = titleInput.value.trim();
         if (!title) return;
 
         const goal = {
             id: Date.now().toString(),
-            title: title,
-            targetDate: document.getElementById('goal-date').value,
+            title,
+            targetDate: dateInput.value,
             progress: 0,
-            target: parseInt(document.getElementById('goal-target').value),
-            unit: document.getElementById('goal-unit').value.trim(),
+            target: parseInt(targetInput ? targetInput.value : '1') || 1,
+            unit: unitInput ? unitInput.value.trim() : 'tugas',
             tasks: []
         };
 
         this.goals.push(goal);
-        
-        // Reset form
-        document.getElementById('goal-form').reset();
-        document.getElementById('goal-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('goal-target').value = '1';
-        document.getElementById('goal-unit').value = 'tugas';
-        
-        // Update display and save
-        this.refreshDisplay();
+
+        const goalForm = document.getElementById('goal-form');
+        if (goalForm) goalForm.reset();
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+        if (targetInput) targetInput.value = '1';
+        if (unitInput) unitInput.value = 'tugas';
+
         this.saveData();
+        this.refreshDisplay();
     }
 
     toggleTaskCompletion(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (!task) return;
-
         task.completed = !task.completed;
-        
-        // Mark reminder as interacted if task is completed
+
         if (task.completed) {
-            this.reminders.forEach(reminder => {
-                if (reminder.taskId === taskId) {
-                    reminder.interacted = true;
-                }
-            });
+            this.reminders.forEach(r => { if (r.taskId === taskId) r.interacted = true; });
         }
 
-        this.refreshDisplay();
         this.saveData();
+        this.refreshDisplay();
     }
 
     deleteTask(taskId) {
-        this.tasks = this.tasks.filter(task => task.id !== taskId);
-        this.reminders = this.reminders.filter(reminder => reminder.taskId !== taskId);
-        
-        // Remove task from goals
+        this.tasks = this.tasks.filter(t => t.id !== taskId);
+        this.reminders = this.reminders.filter(r => r.taskId !== taskId);
+
         this.goals.forEach(goal => {
             goal.tasks = goal.tasks.filter(id => id !== taskId);
         });
 
-        this.refreshDisplay();
         this.saveData();
+        this.refreshDisplay();
     }
 
     deleteGoal(goalId) {
-        this.goals = this.goals.filter(goal => goal.id !== goalId);
-        this.refreshDisplay();
+        this.goals = this.goals.filter(g => g.id !== goalId);
         this.saveData();
+        this.refreshDisplay();
     }
 
     updateGoalProgress(goalId) {
         const goal = this.goals.find(g => g.id === goalId);
         if (!goal) return;
-
         if (goal.progress < goal.target) {
-            goal.progress++;
-            this.refreshDisplay();
+            goal.progress += 1;
             this.saveData();
+            this.refreshDisplay();
         }
     }
 
     showReminderModal(reminder) {
         this.activeReminder = reminder;
         const task = this.tasks.find(t => t.id === reminder.taskId);
-        
-        if (task) {
-            document.getElementById('reminder-task-title').textContent = task.title;
-            document.getElementById('reminder-modal').classList.add('active');
-        }
+        if (!task) return;
+
+        const titleEl = document.getElementById('reminder-task-title');
+        if (titleEl) titleEl.textContent = task.title;
+
+        const modal = document.getElementById('reminder-modal');
+        if (modal) modal.classList.add('active');
     }
 
     completeReminder() {
         if (!this.activeReminder) return;
+        const respEl = document.getElementById('reminder-response');
+        const response = respEl ? respEl.value.trim() : '';
 
-        const response = document.getElementById('reminder-response').value.trim();
         this.activeReminder.interacted = true;
         this.activeReminder.response = response;
-        
-        // Also mark task as completed
-        const task = this.tasks.find(t => t.id === this.activeReminder.taskId);
-        if (task) {
-            task.completed = true;
-        }
 
+        const task = this.tasks.find(t => t.id === this.activeReminder.taskId);
+        if (task) task.completed = true;
+
+        this.saveData();
         this.closeModal();
         this.refreshDisplay();
-        this.saveData();
     }
 
     closeModal() {
-        document.getElementById('reminder-modal').classList.remove('active');
-        document.getElementById('reminder-response').value = '';
+        const modal = document.getElementById('reminder-modal');
+        if (modal) modal.classList.remove('active');
+        const respEl = document.getElementById('reminder-response');
+        if (respEl) respEl.value = '';
         this.activeReminder = null;
     }
 
     requestNotificationPermission() {
-        if ('Notification' in window) {
-            Notification.requestPermission().then(permission => {
-                this.notificationPermission = permission;
-                if (permission === 'granted') {
-                    this.hideNotificationBanner();
-                    new Notification('Notifikasi Diaktifkan', {
-                        body: 'Anda akan menerima pengingat untuk tugas yang jatuh tempo.',
-                        icon: '/icon-192.png'
-                    });
-                }
-            });
-        }
+        if (!('Notification' in window)) return;
+        Notification.requestPermission().then(permission => {
+            this.notificationPermission = permission;
+            if (permission === 'granted') this.hideNotificationBanner();
+        });
     }
 
     hideNotificationBanner() {
-        document.getElementById('notification-banner').style.display = 'none';
+        const banner = document.getElementById('notification-banner');
+        if (banner) banner.style.display = 'none';
     }
 
+    // --- Reminder checking (no buffer) ---
     checkReminders() {
         const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        const currentDate = now.toISOString().split('T')[0];
-        
+
         this.reminders.forEach(reminder => {
+            if (reminder.interacted || reminder.notificationShown) return;
+
             const task = this.tasks.find(t => t.id === reminder.taskId);
-            if (task && !reminder.interacted && !reminder.notificationShown && 
-                task.dueDate === currentDate && reminder.time === currentTime) {
-                
+            if (!task) return;
+
+            // convert stored ISO reminder time to Date
+            const reminderTime = new Date(reminder.time);
+
+            // trigger as soon as now >= reminderTime (no extra buffer)
+            if (now >= reminderTime) {
+                // mark and show
                 this.showNotification(reminder, task);
                 reminder.notificationShown = true;
                 task.notified = true;
@@ -285,128 +304,135 @@ class SmartReminder {
     }
 
     showNotification(reminder, task) {
-        // Play sound
+        // play audio (may be blocked if user hasn't interacted with page yet)
         const audio = document.getElementById('notification-sound');
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-
-        // Show browser notification
-        if (this.notificationPermission === 'granted') {
-            const notification = new Notification('Smart Reminder', {
-                body: `Pengingat: ${task.title}\n${reminder.message}`,
-                icon: '/icon-192.png',
-                tag: `reminder-${reminder.id}`,
-                requireInteraction: true
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(() => {
+                // autoplay might be blocked; nothing to do
             });
-
-            notification.onclick = () => {
-                window.focus();
-                this.showReminderModal(reminder);
-                notification.close();
-            };
-
-            setTimeout(() => notification.close(), 30000);
         }
 
-        // Show in-app modal if app is open
+        // desktop/browser notification
+        if (this.notificationPermission === 'granted') {
+            try {
+                const n = new Notification('Smart Reminder', {
+                    body: `Pengingat: ${task.title}
+${reminder.message}`,
+                    icon: '/icon-192.png',
+                    tag: `reminder-${reminder.id}`,
+                    requireInteraction: true
+                });
+
+                n.onclick = () => {
+                    window.focus();
+                    this.showReminderModal(reminder);
+                    n.close();
+                };
+
+                // auto close after some time
+                setTimeout(() => n.close(), 30000);
+            } catch (err) {
+                // ignore if Notification constructor fails
+                console.warn('Notification failed:', err);
+            }
+        }
+
+        // always show in-app modal as well
         this.showReminderModal(reminder);
     }
 
     startReminderChecker() {
-        setInterval(() => this.checkReminders(), 30000); // Check every 30 seconds
-        this.checkReminders(); // Check immediately
+        // check every second to achieve near-instant notification at the scheduled time
+        this._checkerInterval = setInterval(() => this.checkReminders(), 1000);
+        this.checkReminders();
     }
 
+    // --- Rendering + helpers (expanded) ---
     refreshDisplay() {
         this.renderTasks();
         this.renderGoals();
         this.renderReminders();
         this.updateBadges();
+
+        // redraw lucide icons for any newly inserted elements
+        if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
     }
 
     renderTasks() {
         const tasksList = document.getElementById('tasks-list');
         const completedList = document.getElementById('completed-tasks-list');
-        
+        if (!tasksList || !completedList) return;
+
         tasksList.innerHTML = '';
         completedList.innerHTML = '';
-        
-        const pendingTasks = this.tasks.filter(task => !task.completed);
-        const completedTasks = this.tasks.filter(task => task.completed);
-        
-        // Update tasks count
-        document.getElementById('tasks-count').textContent = `${pendingTasks.length} tugas belum selesai`;
-        
-        // Show/hide completed section
-        document.getElementById('completed-tasks').style.display = completedTasks.length > 0 ? 'block' : 'none';
-        
-        // Render pending tasks
-        pendingTasks.forEach(task => {
-            tasksList.appendChild(this.createTaskElement(task));
-        });
-        
-        // Render completed tasks
-        completedTasks.forEach(task => {
-            completedList.appendChild(this.createCompletedTaskElement(task));
-        });
+
+        const pendingTasks = this.tasks.filter(t => !t.completed);
+        const completedTasks = this.tasks.filter(t => t.completed);
+
+        const tasksCountEl = document.getElementById('tasks-count');
+        if (tasksCountEl) tasksCountEl.textContent = `${pendingTasks.length} tugas belum selesai`;
+
+        const completedSection = document.getElementById('completed-tasks');
+        if (completedSection) completedSection.style.display = completedTasks.length > 0 ? 'block' : 'none';
+
+        pendingTasks.forEach(task => tasksList.appendChild(this.createTaskElement(task)));
+        completedTasks.forEach(task => completedList.appendChild(this.createCompletedTaskElement(task)));
     }
 
     renderGoals() {
         const goalsList = document.getElementById('goals-list');
+        if (!goalsList) return;
         goalsList.innerHTML = '';
-        
-        this.goals.forEach(goal => {
-            goalsList.appendChild(this.createGoalElement(goal));
-        });
+        this.goals.forEach(goal => goalsList.appendChild(this.createGoalElement(goal)));
     }
 
     renderReminders() {
         const remindersList = document.getElementById('reminders-list');
         const historyList = document.getElementById('history-list');
-        
+        if (!remindersList || !historyList) return;
+
         remindersList.innerHTML = '';
         historyList.innerHTML = '';
-        
-        const activeReminders = this.reminders.filter(r => !r.interacted && r.notificationShown);
+
+        // active reminders: show ones not interacted with yet (regardless of notificationShown)
+        const activeReminders = this.reminders.filter(r => !r.interacted);
         const historyReminders = this.reminders.filter(r => r.interacted);
-        
-        // Show/hide history section
-        document.getElementById('reminders-history').style.display = historyReminders.length > 0 ? 'block' : 'none';
-        
-        // Render active reminders
-        activeReminders.forEach(reminder => {
-            const task = this.tasks.find(t => t.id === reminder.taskId);
-            if (task) {
-                remindersList.appendChild(this.createReminderElement(reminder, task));
-            }
+
+        const historySection = document.getElementById('reminders-history');
+        if (historySection) historySection.style.display = historyReminders.length > 0 ? 'block' : 'none';
+
+        activeReminders.forEach(r => {
+            const task = this.tasks.find(t => t.id === r.taskId);
+            if (task) remindersList.appendChild(this.createReminderElement(r, task));
         });
-        
-        // Render history
-        historyReminders.forEach(reminder => {
-            const task = this.tasks.find(t => t.id === reminder.taskId);
-            if (task) {
-                historyList.appendChild(this.createHistoryElement(reminder, task));
-            }
+
+        historyReminders.forEach(r => {
+            const task = this.tasks.find(t => t.id === r.taskId);
+            if (task) historyList.appendChild(this.createHistoryElement(r, task));
         });
     }
 
     createTaskElement(task) {
         const div = document.createElement('div');
         div.className = `task-item priority-${task.priority} ${task.notified ? 'notified' : ''}`;
-        
+
         const priorityIcon = this.getPriorityIcon(task.priority);
         const priorityText = this.getPriorityText(task.priority);
-        
+
+        const reminderTime = task.reminderTime ? new Date(task.reminderTime) : null;
+        const timeLabel = reminderTime ? reminderTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '-';
+
         div.innerHTML = `
             <div class="task-header">
-                <div class="task-title">${task.title}</div>
+                <div class="task-title">${this.escapeHtml(task.title)}</div>
                 <div class="task-priority">
                     ${priorityIcon}
                     <span>${priorityText}</span>
                     ${task.notified ? '<i data-lucide="bell" class="pulse"></i>' : ''}
                 </div>
             </div>
-            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+            ${task.description ? `<div class="task-description">${this.escapeHtml(task.description)}</div>` : ''}
             <div class="task-meta">
                 <div class="task-meta-item">
                     <i data-lucide="calendar"></i>
@@ -414,16 +440,16 @@ class SmartReminder {
                 </div>
                 <div class="task-meta-item">
                     <i data-lucide="bell"></i>
-                    <span>${task.reminderTime}</span>
+                    <span>${timeLabel}</span>
                 </div>
                 ${task.optimalTime ? `
                 <div class="task-meta-item">
                     <i data-lucide="clock"></i>
-                    <span>Optimal: ${task.optimalTime}</span>
+                    <span>Optimal: ${this.escapeHtml(task.optimalTime)}</span>
                 </div>
                 ` : ''}
                 <div class="task-meta-item">
-                    <span>${task.category}</span>
+                    <span>${this.escapeHtml(task.category || '')}</span>
                 </div>
             </div>
             <div class="task-actions">
@@ -437,28 +463,23 @@ class SmartReminder {
                 </button>
             </div>
         `;
-        
-        // Add event listeners
-        div.querySelector('.complete-btn').addEventListener('click', () => {
-            this.toggleTaskCompletion(task.id);
-        });
-        
-        div.querySelector('.delete-btn').addEventListener('click', () => {
-            this.deleteTask(task.id);
-        });
-        
+
+        // attach listeners (use querySelector after adding element)
+        div.querySelector('.complete-btn').addEventListener('click', () => this.toggleTaskCompletion(task.id));
+        div.querySelector('.delete-btn').addEventListener('click', () => this.deleteTask(task.id));
+
         return div;
     }
 
     createGoalElement(goal) {
         const div = document.createElement('div');
         div.className = 'goal-item';
-        
+
         const progressPercentage = (goal.progress / goal.target) * 100;
-        
+
         div.innerHTML = `
             <div class="goal-header">
-                <div class="goal-title">${goal.title}</div>
+                <div class="goal-title">${this.escapeHtml(goal.title)}</div>
                 <div class="goal-actions">
                     <button class="btn-outline delete-goal-btn" data-id="${goal.id}">
                         <i data-lucide="trash-2"></i>
@@ -466,11 +487,11 @@ class SmartReminder {
                 </div>
             </div>
             <div class="goal-description">
-                Target: ${goal.target} ${goal.unit} • Selesai: ${this.formatDate(goal.targetDate)}
-            </极客div>
+                Target: ${goal.target} ${this.escapeHtml(goal.unit)} • Selesai: ${this.formatDate(goal.targetDate)}
+            </div>
             <div class="progress-container">
                 <div class="progress-info">
-                    <span>Progress: ${goal.progress}/${goal.target} ${goal.unit}</span>
+                    <span>Progress: ${goal.progress}/${goal.target} ${this.escapeHtml(goal.unit)}</span>
                     <span>${Math.round(progressPercentage)}%</span>
                 </div>
                 <div class="progress-bar">
@@ -486,23 +507,20 @@ class SmartReminder {
                 Tambah Progress
             </button>
         `;
-        
-        // Add event listeners
-        div.querySelector('.progress-btn').addEventListener('click', () => {
-            this.updateGoalProgress(goal.id);
-        });
-        
-        div.querySelector('.delete-goal-btn').addEventListener('click', () => {
-            this.deleteGoal(goal.id);
-        });
-        
+
+        div.querySelector('.progress-btn').addEventListener('click', () => this.updateGoalProgress(goal.id));
+        div.querySelector('.delete-goal-btn').addEventListener('click', () => this.deleteGoal(goal.id));
+
         return div;
     }
 
     createReminderElement(reminder, task) {
         const div = document.createElement('div');
         div.className = 'task-item priority-high';
-        
+
+        const reminderTime = reminder.time ? new Date(reminder.time) : null;
+        const timeLabel = reminderTime ? reminderTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '-';
+
         div.innerHTML = `
             <div class="task-header">
                 <div class="task-title">Pengingat Tugas</div>
@@ -510,11 +528,11 @@ class SmartReminder {
                     <i data-lucide="bell" class="pulse"></i>
                 </div>
             </div>
-            <div class="task-description">${reminder.message}</div>
+            <div class="task-description">${this.escapeHtml(reminder.message)}</div>
             <div class="task-meta">
                 <div class="task-meta-item">
                     <i data-lucide="clock"></i>
-                    <span>${reminder.time}</span>
+                    <span>${timeLabel}</span>
                 </div>
                 <div class="task-meta-item">
                     <i data-lucide="calendar"></i>
@@ -522,125 +540,125 @@ class SmartReminder {
                 </div>
             </div>
             <div class="task-actions">
-                <button class="btn-primary respond-btn" data-id="${reminder.id}">
-                    Tandai sebagai Dikerjakan
-                </button>
+                <button class="btn-primary respond-btn" data-id="${reminder.id}">Tandai sebagai Dikerjakan</button>
             </div>
         `;
-        
-        div.querySelector('.respond-btn').addEventListener('click', () => {
-            this.showReminderModal(reminder);
-        });
-        
+
+        div.querySelector('.respond-btn').addEventListener('click', () => this.showReminderModal(reminder));
+
         return div;
     }
 
     createCompletedTaskElement(task) {
         const div = document.createElement('div');
         div.className = 'completed-task';
-        
+
         div.innerHTML = `
             <div class="completed-task-text">
                 <i data-lucide="check-circle"></i>
-                <span>${task.title}</span>
+                <span>${this.escapeHtml(task.title)}</span>
             </div>
             <button class="btn-outline delete-btn" data-id="${task.id}">
                 <i data-lucide="trash-2"></i>
             </button>
         `;
-        
-        div.querySelector('.delete-btn').addEventListener('click', () => {
-            this.deleteTask(task.id);
-        });
-        
+
+        div.querySelector('.delete-btn').addEventListener('click', () => this.deleteTask(task.id));
         return div;
     }
 
     createHistoryElement(reminder, task) {
         const div = document.createElement('div');
         div.className = 'completed-task';
-        
+
         div.innerHTML = `
             <div>
                 <div class="completed-task-text">
                     <i data-lucide="check-circle"></i>
-                    <span>${task.title}</span>
+                    <span>${this.escapeHtml(task.title)}</span>
                 </div>
-                <p class="text-sm text-gray-600">
-                    Ditandai selesai pada ${reminder.time}
-                </p>
+                <p class="text-sm text-gray-600">Ditandai selesai pada ${new Date(reminder.time).toLocaleString()}</p>
                 ${reminder.response ? `
-                <p class="text-sm text-gray-700 mt-2">
-                    <strong>Catatan:</strong> ${reminder.response}
-                </p>
-                ` : ''}
+                <p class="text-sm text-gray-700 mt-2"><strong>Catatan:</strong> ${this.escapeHtml(reminder.response)}</p>` : ''}
             </div>
         `;
-        
+
         return div;
     }
 
+    // small helpers
     getPriorityIcon(priority) {
-        const colors = {
-            high: '#ef4444',
-            medium: '#f59e0b', 
-            low: '#10b981'
+        const mapping = {
+            high: '<i data-lucide="flag"></i>',
+            medium: '<i data-lucide="flag"></i>',
+            low: '<i data-lucide="flag"></i>'
         };
-        return `<i data-lucide="flag" style="color: ${colors[priority]}; width: 16px; height: 16px;"></i>`;
+        return mapping[priority] || mapping.medium;
     }
 
     getPriorityText(priority) {
-        const texts = {
-            high: 'Tinggi',
-            medium: 'Sedang',
-            low: 'Rendah'
-        };
-        return texts[priority];
+        return priority === 'high' ? 'Tinggi' : (priority === 'medium' ? 'Sedang' : 'Rendah');
     }
 
     formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('id-ID', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short'
-        });
+        if (!dateString) return '-';
+        const d = new Date(dateString);
+        return d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
     }
 
     updateBadges() {
-        // Update unread reminders badge
         const unreadReminders = this.reminders.filter(r => !r.interacted && r.notificationShown).length;
-        document.getElementById('unread-badge').textContent = unreadReminders;
-        document.getElementById('reminders-badge').textContent = unreadReminders;
-        
-        // Update notified tasks badge
         const notifiedTasks = this.tasks.filter(t => !t.completed && t.notified).length;
-        document.getElementById('tasks-badge').textContent = notifiedTasks;
-        
-        // Update document title
+
+        const unreadEl = document.getElementById('unread-badge');
+        const remindersBadge = document.getElementById('reminders-badge');
+        const tasksBadge = document.getElementById('tasks-badge');
+
+        if (unreadEl) unreadEl.textContent = unreadReminders;
+        if (remindersBadge) remindersBadge.textContent = this.reminders.filter(r => !r.interacted).length;
+        if (tasksBadge) tasksBadge.textContent = this.tasks.filter(t => !t.completed && t.notified).length;
+
         document.title = unreadReminders > 0 ? `(${unreadReminders}) Smart Reminder` : 'Smart Reminder';
     }
 
     saveData() {
-        localStorage.setItem('smart-reminder-tasks', JSON.stringify(this.tasks));
-        localStorage.setItem('smart-reminder-goals', JSON.stringify(this.goals));
-        localStorage.setItem('smart-reminder-reminders', JSON.stringify(this.reminders));
+        try {
+            const data = { tasks: this.tasks, goals: this.goals, reminders: this.reminders };
+            localStorage.setItem('smart-reminder-data', JSON.stringify(data));
+        } catch (e) {
+            console.warn('Failed to save data', e);
+        }
     }
 
     loadData() {
-        const savedTasks = localStorage.getItem('smart-reminder-tasks');
-        const savedGoals = localStorage.getItem('smart-reminder-goals');
-        const savedReminders = localStorage.getItem('smart-reminder-reminders');
+        try {
+            const raw = localStorage.getItem('smart-reminder-data');
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            this.tasks = parsed.tasks || [];
+            this.goals = parsed.goals || [];
+            this.reminders = parsed.reminders || [];
+            this.refreshDisplay();
+        } catch (e) {
+            console.warn('Failed to load data', e);
+        }
+    }
 
-        if (savedTasks) this.tasks = JSON.parse(savedTasks);
-        if (savedGoals) this.goals = JSON.parse(savedGoals);
-        if (savedReminders) this.reminders = JSON.parse(savedReminders);
-
-        this.refreshDisplay();
+    // small utility to avoid XSS in inserted strings
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 }
 
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new SmartReminder();
+// initialize app when DOM ready
+window.addEventListener('DOMContentLoaded', () => {
+    window.smartReminderApp = new SmartReminder();
+    // ensure lucide icons are created once at startup
+    if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
 });
