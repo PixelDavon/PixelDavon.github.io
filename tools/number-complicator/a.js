@@ -11,7 +11,7 @@ g.addEventListener("click",function(){
     let length = l.value;
     for(let j=0;j<length;j++){
         var ra=ri(-10000,10000);
-        var op=ri(0,2);
+        var op=ri(0,1);
         if(op==0){
             calculations.push(ra*-1);
         } else if(op==1){
@@ -19,7 +19,7 @@ g.addEventListener("click",function(){
         }
     }
     let result = calculations.reduce((a,b)=>{
-        let op=ri(0,2);
+        let op=ri(0,1);
         if(op==0){
             operators.push(" + ");
             return a+b;
