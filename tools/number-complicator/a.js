@@ -8,7 +8,7 @@ g.addEventListener("click",function(){
     let v = parseInt(i.value);
     let calculations=[v];
     let operators=[];
-    let length = l.value;
+    let length = l.value-1;
     for(let j=0;j<length;j++){
         var ra=ri(-10000,10000);
         var op=ri(0,1);
